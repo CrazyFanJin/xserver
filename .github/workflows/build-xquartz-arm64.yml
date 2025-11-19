@@ -1,0 +1,87 @@
+name: Build XQuartz (macOS arm64)
+
+permissions:
+  contents: write
+
+env:
+  MESON_BUILDDIR: build
+  X11_PREFIX: /Users/runner/x11
+  X11_BUILD_DIR: /Users/runner/build-deps
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/build-xquartz-arm64.yml'
+      - 'meson.build'
+      - 'meson_options.txt'
+      - 'hw/xquartz/**'
+
+jobs:
+  xquartz-arm64:
+    runs-on: macos-14
+    env:
+      MESON_ARGS: >-
+        -Dprefix=/tmp
+        -Dxquartz=true
+        -Dxorg=false
+        -Dxephyr=false
+        -Dxnest=false
+        -Dxvfb=false
+        -Dxfbdev=false
+        -Dglx=false
+        -Dwerror=false
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+
+      - name: Prepare build environment
+        run: |
+          echo "PKG_CONFIG_PATH=${X11_PREFIX}/share/pkgconfig:${X11_PREFIX}/lib/pkgconfig:${PKG_CONFIG_PATH}" >> "$GITHUB_ENV"
+
+      - name: Homebrew cache
+        uses: actions/cache@v4
+        with:
+          path: /Users/runner/Library/Caches/Homebrew
+          key: ${{ runner.os }}-homebrew-cache-${{ hashFiles('.github/scripts/macos/install-pkg.sh') }}
+          restore-keys: ${{ runner.os }}-homebrew-cache-
+
+      - name: Install packages (brew)
+        run: .github/scripts/macos/install-pkg.sh
+
+      - name: X11 prereq cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ env.X11_PREFIX }}
+            ${{ env.X11_BUILD_DIR }}/xts
+            ${{ env.X11_BUILD_DIR }}/piglit
+          key: ${{ runner.os }}-x11-deps-${{ hashFiles('.github/scripts/install-prereq.sh') }}
+          restore-keys: ${{ runner.os }}-x11-deps-
+
+      - name: Build X11 prereqs (proto/libs)
+        run: .github/scripts/install-prereq.sh
+
+      - name: Configure (meson)
+        run: |
+          meson setup "${MESON_BUILDDIR}" ${MESON_ARGS}
+
+      - name: Compile XQuartz
+        run: |
+          # 构建全部目标以确保依赖正确链接（包含静态库等）
+          meson compile -C "${MESON_BUILDDIR}" -j2
+
+      - name: Archive build logs
+        uses: actions/upload-artifact@v4
+        with:
+          name: xquartz-macos-arm64-logs
+          path: |
+            build/meson-logs/*
+
+      - name: Upload XQuartz binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: xquartz-macos-arm64-bin
+          path: |
+            build/hw/xquartz/mach-startup/Xquartz
+

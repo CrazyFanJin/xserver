@@ -10,6 +10,10 @@ env:
 
 on:
     push:
+        branches:
+            - master
+            - 'maint-*'
+            - 'rfc/new-abi*'
     pull_request:
 
 jobs:
