@@ -19,10 +19,9 @@ jobs:
         -Dxvfb=false
         -Dglx=false
         -Dwerror=false
-        -Dstrip=true
-        -Dtests=false
         -Dapple-applications-dir=/tmp/opt/X11/Applications
         -Dapple-application-name=XQuartz
+      PKG_CONFIG_PATH: /opt/homebrew/lib/pkgconfig:/opt/homebrew/share/pkgconfig
 
     steps:
       - name: Checkout
@@ -34,7 +33,7 @@ jobs:
             meson ninja pixman freetype fontconfig \
             libxcb xcb-util xcb-util-image xcb-util-wm \
             xorgproto libX11 libXext libXdmcp glib \
-            libepoxy
+            libepoxy libxkbfile xkbcomp libxshmfence libbsd
 
       - name: Prepare build directory
         run: |
