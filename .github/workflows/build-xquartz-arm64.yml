@@ -8,8 +8,8 @@ jobs:
     runs-on: macos-14
 
     env:
-      PREFIX: ${{ runner.temp }}/opt/X11
-      BUILD_DIR: ${{ runner.temp }}/build
+      PREFIX: /tmp/opt/X11
+      BUILD_DIR: /tmp/build
       HOMEBREW_NO_AUTO_UPDATE: 1
       HOMEBREW_NO_INSTALL_CLEANUP: 1
       MESON_ARGS: >-
@@ -21,7 +21,7 @@ jobs:
         -Dwerror=false
         -Dstrip=true
         -Dtests=false
-        -Dapple-applications-dir=${{ runner.temp }}/opt/X11/Applications
+        -Dapple-applications-dir=/tmp/opt/X11/Applications
         -Dapple-application-name=XQuartz
 
     steps:
