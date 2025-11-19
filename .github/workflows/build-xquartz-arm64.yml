@@ -81,3 +81,24 @@ jobs:
           name: xquartz-macos-arm64-bin
           path: |
             build/hw/xquartz/mach-startup/Xquartz
+
+      - name: Install to staging with DESTDIR (no option changes)
+        run: |
+          # 使用 Meson 安装到临时目录，不更改任何编译选项或目录设置
+          mkdir -p "$PWD/stage"
+          DESTDIR="$PWD/stage" meson install -C "${MESON_BUILDDIR}"
+
+      - name: Assemble /opt tree from staged install
+        run: |
+          # 将 stage 下的 /tmp 前缀重定位为打包用的 /opt/X11 结构
+          PKG_DIR="$PWD/opt-package"
+          mkdir -p "$PKG_DIR/opt"
+          rm -rf "$PKG_DIR/opt/X11"
+          mv "$PWD/stage/tmp" "$PKG_DIR/opt/X11"
+
+      - name: Archive /opt runtime tree
+        uses: actions/upload-artifact@v4
+        with:
+          name: opt-X11-runtime
+          path: |
+            opt-package/opt
