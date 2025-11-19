@@ -19,11 +19,10 @@ jobs:
     runs-on: macos-14
     env:
       MESON_ARGS: >-
-        -Dprefix=/opt/X11
+        -Dprefix=/tmp
         -Dxquartz=true
         -Dxorg=true
         -Dglx=true
-        -Dglx=gallium
         -Dxnest=false
         -Dxephyr=false
         -Dxvfb=false
