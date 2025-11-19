@@ -11,11 +11,8 @@ env:
 on:
   workflow_dispatch:
   push:
-    paths:
-      - '.github/workflows/build-xquartz-arm64.yml'
-      - 'meson.build'
-      - 'meson_options.txt'
-      - 'hw/xquartz/**'
+    branches:
+      - master
 
 jobs:
   xquartz-arm64:
@@ -84,4 +81,3 @@ jobs:
           name: xquartz-macos-arm64-bin
           path: |
             build/hw/xquartz/mach-startup/Xquartz
-

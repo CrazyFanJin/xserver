@@ -2,9 +2,7 @@ name: delete old workflow runs
 on:
     schedule:
         - cron: '0 0 * * *' # nightly
-    push:
-        branches:
-            - master
+    # remove push trigger on master to avoid running on code pushes
 
 jobs:
     delete_old_workflow_runs:

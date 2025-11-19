@@ -1,9 +1,9 @@
 name: check PRs for merge conflicts
 
 on:
+    workflow_dispatch:
     push:
         branches:
-          - master
           - 'maint-*'
           - 'rfc/new-abi*'
 

@@ -9,11 +9,6 @@ env:
     X11_BUILD_DIR:   /home/runner/build-deps
 
 on:
-    push:
-        branches:
-            - master
-            - 'maint-*'
-            - 'rfc/new-abi*'
     pull_request:
 
 jobs:
