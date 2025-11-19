@@ -18,16 +18,13 @@ jobs:
   xquartz-arm64:
     runs-on: macos-14
     env:
+      # 和 X11Libre 官方的 xserver-build-macos 一致，只控制前缀和少数开关
       MESON_ARGS: >-
         -Dprefix=/tmp
-        -Dxquartz=true
-        -Dxorg=true
         -Dglx=false
         -Dxnest=false
-        -Dxephyr=false
-        -Dxvfb=false
         -Dxfbdev=false
-        -Dwerror=false
+
     steps:
       - name: Check out repository code
         uses: actions/checkout@v4
@@ -59,14 +56,19 @@ jobs:
       - name: Build X11 prereqs (proto/libs)
         run: .github/scripts/install-prereq.sh
 
-      - name: Configure (meson)
+      # 关键：用官方的 meson-build.sh 来跑 meson setup/compile
+      - name: Build XQuartz (meson-build.sh)
         run: |
-          meson setup "${MESON_BUILDDIR}" ${MESON_ARGS}
+          .gitlab-ci/meson-build.sh
 
-      - name: Compile XQuartz
+      # 跟官方 macOS job 类似的测试步骤，可选
+      - name: Tests (may fail)
+        continue-on-error: true
         run: |
-          # 构建全部目标以确保依赖正确链接（包含静态库等）
-          meson compile -C "${MESON_BUILDDIR}" -j2
+          meson test -C "${MESON_BUILDDIR}" --print-errorlogs -j1 || true
+        env:
+          XTEST_DIR:  ${{ env.X11_BUILD_DIR }}/xts
+          PIGLIT_DIR: ${{ env.X11_BUILD_DIR }}/piglit
 
       - name: Archive build logs
         uses: actions/upload-artifact@v4
@@ -74,7 +76,9 @@ jobs:
           name: xquartz-macos-arm64-logs
           path: |
             build/meson-logs/*
+            build/test/piglit-results/*
 
+      # 直接上传 XQuartz 可执行文件（配合你本地替换 /Applications 里的 X11）
       - name: Upload XQuartz binary
         uses: actions/upload-artifact@v4
         with:
@@ -82,15 +86,15 @@ jobs:
           path: |
             build/hw/xquartz/mach-startup/Xquartz
 
-      - name: Install to staging with DESTDIR (no option changes)
+      # 用 DESTDIR 安装到临时 staging 目录，前缀是 /tmp，对应 stage/tmp
+      - name: Install to staging with DESTDIR
         run: |
-          # 使用 Meson 安装到临时目录，不更改任何编译选项或目录设置
           mkdir -p "$PWD/stage"
           DESTDIR="$PWD/stage" meson install -C "${MESON_BUILDDIR}"
 
+      # 把 stage 下的 /tmp/X11 重新整理成 /opt/X11 目录树
       - name: Assemble /opt tree from staged install
         run: |
-          # 将 stage 下的 /tmp 前缀重定位为打包用的 /opt/X11 结构
           PKG_DIR="$PWD/opt-package"
           mkdir -p "$PKG_DIR/opt"
           rm -rf "$PKG_DIR/opt/X11"
