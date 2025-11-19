@@ -22,7 +22,7 @@ jobs:
         -Dprefix=/tmp
         -Dxquartz=true
         -Dxorg=true
-        -Dglx=true
+        -Dglx=false
         -Dxnest=false
         -Dxephyr=false
         -Dxvfb=false
