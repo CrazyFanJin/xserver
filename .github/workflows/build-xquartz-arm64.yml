@@ -24,6 +24,7 @@ jobs:
         -Dglx=false
         -Dxnest=false
         -Dxfbdev=false
+        -Dsanitize=none
 
     steps:
       - name: Check out repository code
